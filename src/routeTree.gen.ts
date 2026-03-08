@@ -14,8 +14,9 @@ import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as AuthVehiclesRouteImport } from './routes/_auth.vehicles'
 import { Route as AuthVehicleTypesRouteImport } from './routes/_auth.vehicle-types'
 import { Route as AuthOrdersRouteImport } from './routes/_auth.orders'
-import { Route as AuthLocationsRouteImport } from './routes/_auth.locations'
+import { Route as AuthDestinationsRouteImport } from './routes/_auth.destinations'
 import { Route as AuthComputesRouteImport } from './routes/_auth.computes'
+import { Route as AuthBentoOrdersRouteImport } from './routes/_auth.bento-orders'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -41,9 +42,9 @@ const AuthOrdersRoute = AuthOrdersRouteImport.update({
   path: '/orders',
   getParentRoute: () => AuthRoute,
 } as any)
-const AuthLocationsRoute = AuthLocationsRouteImport.update({
-  id: '/locations',
-  path: '/locations',
+const AuthDestinationsRoute = AuthDestinationsRouteImport.update({
+  id: '/destinations',
+  path: '/destinations',
   getParentRoute: () => AuthRoute,
 } as any)
 const AuthComputesRoute = AuthComputesRouteImport.update({
@@ -51,12 +52,18 @@ const AuthComputesRoute = AuthComputesRouteImport.update({
   path: '/computes',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthBentoOrdersRoute = AuthBentoOrdersRouteImport.update({
+  id: '/bento-orders',
+  path: '/bento-orders',
+  getParentRoute: () => AuthRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/bento-orders': typeof AuthBentoOrdersRoute
   '/computes': typeof AuthComputesRoute
-  '/locations': typeof AuthLocationsRoute
+  '/destinations': typeof AuthDestinationsRoute
   '/orders': typeof AuthOrdersRoute
   '/vehicle-types': typeof AuthVehicleTypesRoute
   '/vehicles': typeof AuthVehiclesRoute
@@ -64,8 +71,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/bento-orders': typeof AuthBentoOrdersRoute
   '/computes': typeof AuthComputesRoute
-  '/locations': typeof AuthLocationsRoute
+  '/destinations': typeof AuthDestinationsRoute
   '/orders': typeof AuthOrdersRoute
   '/vehicle-types': typeof AuthVehicleTypesRoute
   '/vehicles': typeof AuthVehiclesRoute
@@ -74,8 +82,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_auth': typeof AuthRouteWithChildren
   '/login': typeof LoginRoute
+  '/_auth/bento-orders': typeof AuthBentoOrdersRoute
   '/_auth/computes': typeof AuthComputesRoute
-  '/_auth/locations': typeof AuthLocationsRoute
+  '/_auth/destinations': typeof AuthDestinationsRoute
   '/_auth/orders': typeof AuthOrdersRoute
   '/_auth/vehicle-types': typeof AuthVehicleTypesRoute
   '/_auth/vehicles': typeof AuthVehiclesRoute
@@ -85,8 +94,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/bento-orders'
     | '/computes'
-    | '/locations'
+    | '/destinations'
     | '/orders'
     | '/vehicle-types'
     | '/vehicles'
@@ -94,8 +104,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/bento-orders'
     | '/computes'
-    | '/locations'
+    | '/destinations'
     | '/orders'
     | '/vehicle-types'
     | '/vehicles'
@@ -103,8 +114,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_auth'
     | '/login'
+    | '/_auth/bento-orders'
     | '/_auth/computes'
-    | '/_auth/locations'
+    | '/_auth/destinations'
     | '/_auth/orders'
     | '/_auth/vehicle-types'
     | '/_auth/vehicles'
@@ -152,11 +164,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthOrdersRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/_auth/locations': {
-      id: '/_auth/locations'
-      path: '/locations'
-      fullPath: '/locations'
-      preLoaderRoute: typeof AuthLocationsRouteImport
+    '/_auth/destinations': {
+      id: '/_auth/destinations'
+      path: '/destinations'
+      fullPath: '/destinations'
+      preLoaderRoute: typeof AuthDestinationsRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_auth/computes': {
@@ -166,20 +178,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthComputesRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_auth/bento-orders': {
+      id: '/_auth/bento-orders'
+      path: '/bento-orders'
+      fullPath: '/bento-orders'
+      preLoaderRoute: typeof AuthBentoOrdersRouteImport
+      parentRoute: typeof AuthRoute
+    }
   }
 }
 
 interface AuthRouteChildren {
+  AuthBentoOrdersRoute: typeof AuthBentoOrdersRoute
   AuthComputesRoute: typeof AuthComputesRoute
-  AuthLocationsRoute: typeof AuthLocationsRoute
+  AuthDestinationsRoute: typeof AuthDestinationsRoute
   AuthOrdersRoute: typeof AuthOrdersRoute
   AuthVehicleTypesRoute: typeof AuthVehicleTypesRoute
   AuthVehiclesRoute: typeof AuthVehiclesRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
+  AuthBentoOrdersRoute: AuthBentoOrdersRoute,
   AuthComputesRoute: AuthComputesRoute,
-  AuthLocationsRoute: AuthLocationsRoute,
+  AuthDestinationsRoute: AuthDestinationsRoute,
   AuthOrdersRoute: AuthOrdersRoute,
   AuthVehicleTypesRoute: AuthVehicleTypesRoute,
   AuthVehiclesRoute: AuthVehiclesRoute,

@@ -10,7 +10,7 @@ export const Route = createRootRoute({
       throw redirect({ to: '/login' })
     }
     if (isAuthenticated && isLoginPage) {
-      throw redirect({ to: '/locations' })
+      throw redirect({ to: '/destinations' })
     }
   },
   component: () => <Outlet />,

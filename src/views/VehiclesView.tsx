@@ -2,13 +2,15 @@ import { useRef, useState } from 'react'
 import { Plus, Pencil, Trash2, Truck } from 'lucide-react'
 import { useVehicles, useDeleteVehicle } from '@/hooks/useVehicles'
 import { useVehicleTypes } from '@/hooks/useVehicleTypes'
+import { useDestinations } from '@/hooks/useDestinations'
 import VehicleFormModal from '@/components/vehicles/VehicleFormModal'
-import { formatLimit } from '@/lib/utils'
+import { formatTimestamp } from '@/lib/utils'
 import type { Vehicle } from '@/types'
 
 export default function VehiclesView() {
   const { data: vehicles = [], isLoading, error, refetch } = useVehicles()
   const { data: vehicleTypes = [] } = useVehicleTypes()
+  const { data: destinations = [] } = useDestinations()
   const deleteVehicle = useDeleteVehicle()
 
   const [showModal, setShowModal] = useState(false)
@@ -17,7 +19,12 @@ export default function VehiclesView() {
   const deleteDialogRef = useRef<HTMLDialogElement>(null)
 
   function getTypeName(id: string) {
-    return vehicleTypes.find((t) => t.id === id)?.name ?? id
+    return vehicleTypes.find((t) => t.id === id)?.name ?? '-'
+  }
+
+  function getDepotName(id: string | null) {
+    if (!id) return '-'
+    return destinations.find((d) => d.id === id)?.name ?? id.slice(0, 8) + '...'
   }
 
   function openCreate() {
@@ -44,7 +51,6 @@ export default function VehiclesView() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">車輛管理</h1>
@@ -56,14 +62,12 @@ export default function VehiclesView() {
         </button>
       </div>
 
-      {/* Loading */}
       {isLoading && (
         <div className="flex justify-center items-center py-16">
           <span className="loading loading-spinner loading-md text-primary" />
         </div>
       )}
 
-      {/* Error */}
       {!isLoading && error && (
         <div className="alert alert-error">
           <span>{error.message}</span>
@@ -71,26 +75,24 @@ export default function VehiclesView() {
         </div>
       )}
 
-      {/* Table */}
       {!isLoading && !error && (
         <div className="card bg-base-100 shadow-sm border border-base-200">
           <div className="overflow-x-auto">
             <table className="table table-sm w-full">
               <thead>
                 <tr className="border-b border-base-200 bg-base-50 text-xs text-base-content/60 uppercase tracking-wider">
-                  <th className="font-semibold">車輛名稱</th>
-                  <th className="font-semibold">車牌</th>
+                  <th className="font-semibold">車號</th>
                   <th className="font-semibold">車輛類型</th>
-                  <th className="font-semibold">載貨量</th>
-                  <th className="font-semibold">距離限制</th>
-                  <th className="font-semibold">工時限制</th>
+                  <th className="font-semibold">預設出發地</th>
+                  <th className="font-semibold">備註</th>
+                  <th className="font-semibold">建立時間</th>
                   <th className="font-semibold text-right">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {vehicles.length === 0 ? (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={6}>
                       <div className="flex flex-col items-center justify-center py-12 text-base-content/40">
                         <Truck className="w-10 h-10 mb-3 opacity-30" />
                         <p className="font-medium">尚無車輛</p>
@@ -100,35 +102,20 @@ export default function VehiclesView() {
                   </tr>
                 ) : vehicles.map((v) => (
                   <tr key={v.id} className="hover:bg-base-50 border-b border-base-100 last:border-0">
-                    <td className="font-medium">{v.name}</td>
                     <td>
-                      <span className="badge badge-ghost badge-sm font-mono text-xs">
-                        {v.licensePlate}
-                      </span>
+                      <span className="badge badge-ghost badge-sm font-mono text-xs">{v.vehicle_number}</span>
                     </td>
                     <td>
-                      <span className="badge badge-outline badge-sm text-xs">
-                        {getTypeName(v.vehicleTypeId)}
-                      </span>
+                      <span className="badge badge-outline badge-sm text-xs">{getTypeName(v.vehicle_type)}</span>
                     </td>
-                    <td className="text-sm font-medium">{v.cargoCapacity}</td>
-                    <td className="text-sm">
-                      <span className={v.distanceLimit === null ? 'text-base-content/40' : 'text-base-content'}>
-                        {formatLimit(v.distanceLimit, '公里')}
-                      </span>
+                    <td className="text-sm">{getDepotName(v.depot_id)}</td>
+                    <td className="text-sm text-base-content/60 max-w-32 truncate">
+                      {v.comment_for_account ?? '-'}
                     </td>
-                    <td className="text-sm">
-                      <span className={v.workingHoursLimit === null ? 'text-base-content/40' : 'text-base-content'}>
-                        {formatLimit(v.workingHoursLimit, '小時')}
-                      </span>
-                    </td>
+                    <td className="text-sm">{formatTimestamp(v.created_at)}</td>
                     <td>
                       <div className="flex justify-end gap-1">
-                        <button
-                          className="btn btn-ghost btn-xs tooltip"
-                          data-tip="編輯"
-                          onClick={() => openEdit(v)}
-                        >
+                        <button className="btn btn-ghost btn-xs tooltip" data-tip="編輯" onClick={() => openEdit(v)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
@@ -145,7 +132,6 @@ export default function VehiclesView() {
               </tbody>
             </table>
           </div>
-
           {vehicles.length > 0 && (
             <div className="px-4 py-2.5 border-t border-base-200 text-xs text-base-content/40">
               共 {vehicles.length} 輛車輛
@@ -154,42 +140,23 @@ export default function VehiclesView() {
         </div>
       )}
 
-      {/* Form Modal */}
-      <VehicleFormModal
-        open={showModal}
-        editData={editingVehicle}
-        onClose={() => setShowModal(false)}
-      />
+      <VehicleFormModal open={showModal} editData={editingVehicle} onClose={() => setShowModal(false)} />
 
-      {/* Delete Confirm Dialog */}
-      <dialog
-        ref={deleteDialogRef}
-        className="modal"
-        onClose={() => setDeletingVehicle(null)}
-      >
+      <dialog ref={deleteDialogRef} className="modal" onClose={() => setDeletingVehicle(null)}>
         <div className="modal-box max-w-sm">
           <h3 className="font-semibold text-base mb-2">確認刪除</h3>
           <p className="text-sm text-base-content/70">
-            確定要刪除車輛「<strong>{deletingVehicle?.name}</strong>」嗎？<br />
-            此操作無法復原。
+            確定要刪除車輛「<strong>{deletingVehicle?.vehicle_number}</strong>」嗎？此操作無法復原。
           </p>
           <div className="modal-action mt-5 pt-4 border-t border-base-200">
-            <button className="btn btn-ghost btn-sm" onClick={() => deleteDialogRef.current?.close()}>
-              取消
-            </button>
-            <button
-              className="btn btn-error btn-sm"
-              disabled={deleteVehicle.isPending}
-              onClick={handleDelete}
-            >
+            <button className="btn btn-ghost btn-sm" onClick={() => deleteDialogRef.current?.close()}>取消</button>
+            <button className="btn btn-error btn-sm" disabled={deleteVehicle.isPending} onClick={handleDelete}>
               {deleteVehicle.isPending && <span className="loading loading-spinner loading-xs" />}
               確認刪除
             </button>
           </div>
         </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>關閉</button>
-        </form>
+        <form method="dialog" className="modal-backdrop"><button>關閉</button></form>
       </dialog>
     </div>
   )

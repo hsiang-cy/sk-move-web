@@ -1,134 +1,128 @@
-export interface TimeWindow {
-  start: string // "HH:mm"
-  end: string   // "HH:mm"
-}
-
-export interface Location {
+// Destination
+export interface Destination {
   id: string
-  name: string
-  address: string
-  latitude: number
-  longitude: number
-  timeWindows: TimeWindow[]
-  dwellTime: number          // 分鐘
-  acceptedVehicleTypes: string[] // VehicleType IDs
-  cargoDemand: number
-}
-
-export interface Vehicle {
-  id: string
-  name: string
-  licensePlate: string
-  vehicleTypeId: string
-  distanceLimit: number | null    // null = 無限制（公里）
-  workingHoursLimit: number | null // null = 無限制（小時）
-  cargoCapacity: number
-}
-
-export interface VehicleType {
-  id: string
-  name: string
-  capacity: number
-}
-
-export interface LoginCredentials {
-  account: string
-  password: string
-}
-
-export interface RegisterCredentials {
-  account: string
-  email: string
-  password: string
-  people_name: string
-}
-
-export interface AuthUser {
-  id: string
-  account: string
-  account_role: string
-}
-
-export interface AuthResponse {
-  token: string
-  user: AuthUser
-}
-
-// Order related types
-export interface Order {
-  id: string
-  account_id: number
+  account_id: string
   status: 'inactive' | 'active' | 'deleted'
-  data: Record<string, any> | null
-  created_at: number | null
-  updated_at: number | null
-  destination_snapshot: DestinationSnapshot[]
-  vehicle_snapshot: VehicleSnapshot[]
-  comment_for_account: string | null
-  computes?: Compute[]
-}
-
-export interface DestinationSnapshot {
-  id: number
   name: string
   address: string
   lat: string
   lng: string
-  is_depot?: boolean
-  pickup?: number
-  delivery?: number
-  service_time?: number
-  time_window_start?: number
-  time_window_end?: number
+  data?: unknown
+  comment_for_account: string | null
+  created_at: number | null
+  updated_at: number | null
 }
 
-export interface VehicleSnapshot {
-  id: number
-  vehicle_number: string
+// VehicleType
+export interface VehicleType {
+  id: string
+  account_id: string
+  status: 'inactive' | 'active' | 'deleted'
+  name: string
   capacity: number
-  fixed_cost?: number
+  data?: unknown
+  comment_for_account: string | null
+  created_at: number | null
+  updated_at: number | null
 }
 
-// Compute related types
+// Vehicle
+export interface Vehicle {
+  id: string
+  account_id: string
+  status: 'inactive' | 'active' | 'deleted'
+  vehicle_number: string
+  vehicle_type: string  // UUID ref to VehicleType
+  depot_id: string | null
+  data?: unknown
+  comment_for_account: string | null
+  created_at: number | null
+  updated_at: number | null
+}
+
+// BentoOrderItem
+export interface BentoOrderItem {
+  id: number
+  bento_order_id: string
+  sku: string
+  quantity: number
+}
+
+// BentoOrder
+export interface BentoOrder {
+  id: string
+  account_id: string
+  status: 'inactive' | 'active' | 'deleted'
+  pickup_location_id: string
+  delivery_location_id: string
+  unserved_penalty: number | null
+  comment_for_account: string | null
+  data?: unknown
+  created_at: number | null
+  updated_at: number | null
+  items: BentoOrderItem[]
+}
+
+// Order
+export interface Order {
+  id: string
+  account_id: string
+  status: 'inactive' | 'active' | 'deleted'
+  data?: unknown
+  location_snapshot?: unknown
+  bento_order_snapshot?: unknown
+  vehicle_snapshot?: unknown
+  comment_for_account: string | null
+  created_at: number | null
+  updated_at: number | null
+}
+
+// Compute
 export type ComputeStatus = 'initial' | 'pending' | 'computing' | 'completed' | 'failed' | 'cancelled'
 
 export interface Compute {
   id: string
-  account_id: number
-  order_id: number
+  compute_one_click_id: string
   status: 'inactive' | 'active' | 'deleted'
   compute_status: ComputeStatus
   start_time: number | null
   end_time: number | null
   fail_reason: string | null
-  data: Record<string, any> | null
+  algo_parameter?: unknown
+  data?: unknown
+  comment_for_account: string | null
   created_at: number | null
   updated_at: number | null
-  comment_for_account: string | null
-  routes?: Route[]
 }
 
-// Route related types
-export interface Route {
-  id: string
-  compute_id: number
-  vehicle_id: number
-  status: 'inactive' | 'active' | 'deleted'
-  total_distance: number  // 公尺
-  total_time: number      // 分鐘
-  total_load: number      // 載重
-  created_at: number | null
-  vehicle?: Vehicle
-  stops?: RouteStop[]
-}
-
+// RouteStop
 export interface RouteStop {
-  id: string
-  route_id: number
-  destination_id: number
-  sequence: number        // 停靠順序（從 0 開始）
-  arrival_time: number    // 抵達時間（分鐘，從 00:00 開始）
-  demand: number          // 需求量
+  id: number
+  route_id: string
+  destination_id: string
+  sequence: number
+  arrival_time: number
+  action: string
+  bento_order_ids?: unknown
   created_at: number | null
-  destination?: Location
+  destination?: { name: string; address: string } | null
+}
+
+// RouteWithStops
+export interface RouteWithStops {
+  id: string
+  compute_id: string
+  vehicle_id: string
+  status: 'inactive' | 'active' | 'deleted'
+  total_distance: number
+  total_time: number
+  total_load: number
+  created_at: number | null
+  vehicle?: { vehicle_number: string } | null
+  stops: RouteStop[]
+}
+
+// ComputeWithRoutes
+export interface ComputeWithRoutes extends Compute {
+  routes: RouteWithStops[]
 }

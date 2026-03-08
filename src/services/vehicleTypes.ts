@@ -1,54 +1,26 @@
-import { gql } from './api'
+import { apiClient } from './api'
 import type { VehicleType } from '@/types'
 
-type ApiVehicleType = {
-  id: string
-  name: string
-  capacity: number
-}
-
-const FIELDS = `id name capacity`
-
-function toVehicleType(t: ApiVehicleType): VehicleType {
-  return { id: t.id, name: t.name, capacity: t.capacity }
-}
+type CreateBody = { name: string; capacity?: number; comment_for_account?: string }
+type UpdateBody = { name?: string; capacity?: number; comment_for_account?: string }
 
 export const vehicleTypesService = {
   async getAll(): Promise<VehicleType[]> {
-    const data = await gql<{ customVehicleTypes: ApiVehicleType[] }>(
-      `{ customVehicleTypes(status: active) { ${FIELDS} } }`,
-    )
-    return data.customVehicleTypes.map(toVehicleType)
+    const { data } = await apiClient.get<VehicleType[]>('/vehicle-types')
+    return data.filter((t) => t.status !== 'deleted')
   },
 
-  async create(t: Omit<VehicleType, 'id'>): Promise<VehicleType> {
-    const data = await gql<{ createCustomVehicleType: ApiVehicleType }>(
-      `mutation CreateType($name: String!, $capacity: Int!) {
-        createCustomVehicleType(name: $name, capacity: $capacity) {
-          ${FIELDS}
-        }
-      }`,
-      { name: t.name, capacity: t.capacity },
-    )
-    return toVehicleType(data.createCustomVehicleType)
+  async create(body: CreateBody): Promise<VehicleType> {
+    const { data } = await apiClient.post<VehicleType>('/vehicle-types', body)
+    return data
   },
 
-  async update(id: string, t: Omit<VehicleType, 'id'>): Promise<VehicleType> {
-    const data = await gql<{ updateCustomVehicleType: ApiVehicleType }>(
-      `mutation UpdateType($id: ID!, $name: String, $capacity: Int) {
-        updateCustomVehicleType(id: $id, name: $name, capacity: $capacity) {
-          ${FIELDS}
-        }
-      }`,
-      { id, name: t.name, capacity: t.capacity },
-    )
-    return toVehicleType(data.updateCustomVehicleType)
+  async update(id: string, body: UpdateBody): Promise<VehicleType> {
+    const { data } = await apiClient.put<VehicleType>(`/vehicle-types/${id}`, body)
+    return data
   },
 
   async remove(id: string): Promise<void> {
-    await gql(
-      `mutation DeleteType($id: ID!) { deleteCustomVehicleType(id: $id) { id } }`,
-      { id },
-    )
+    await apiClient.delete(`/vehicle-types/${id}`)
   },
 }

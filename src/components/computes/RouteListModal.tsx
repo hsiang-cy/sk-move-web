@@ -1,7 +1,7 @@
 import type { Compute } from '@/types'
-import { useComputeRoutes } from '@/hooks/useComputes'
+import { useComputeWithRoutes } from '@/hooks/useComputes'
 
-interface RouteListModalProps {
+interface Props {
   open: boolean
   compute: Compute | null
   onClose: () => void
@@ -13,11 +13,12 @@ function formatArrivalTime(minutes: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 }
 
-export default function RouteListModal({ open, compute, onClose }: RouteListModalProps) {
-  const { data: routes = [], isLoading } = useComputeRoutes(
+export default function RouteListModal({ open, compute, onClose }: Props) {
+  const { data: computeWithRoutes, isLoading } = useComputeWithRoutes(
     compute?.id ?? '',
     compute?.compute_status,
   )
+  const routes = computeWithRoutes?.routes ?? []
 
   if (!open || !compute) return null
 
@@ -32,38 +33,23 @@ export default function RouteListModal({ open, compute, onClose }: RouteListModa
             <span className="loading loading-spinner loading-md text-primary" />
           </div>
         ) : routes.length === 0 ? (
-          <div className="text-center py-12 text-base-content/40">
-            <p>無路線資料</p>
-          </div>
+          <div className="text-center py-12 text-base-content/40"><p>無路線資料</p></div>
         ) : (
           <div className="space-y-6">
             {routes.map((route, idx) => (
               <div key={route.id} className="border border-base-200 rounded-lg overflow-hidden">
-                {/* Route header */}
                 <div className="bg-base-50 px-4 py-3 flex flex-wrap gap-4 items-center">
                   <span className="font-semibold text-sm">
                     路線 {idx + 1}
                     {route.vehicle && (
-                      <span className="ml-2 font-mono text-base-content/70">
-                        {route.vehicle.licensePlate}
-                      </span>
-                    )}
-                    {route.vehicle?.name && (
-                      <span className="ml-1 text-base-content/50">（{route.vehicle.name}）</span>
+                      <span className="ml-2 font-mono text-base-content/70">{route.vehicle.vehicle_number}</span>
                     )}
                   </span>
-                  <span className="text-xs text-base-content/50">
-                    總距離：{(route.total_distance / 1000).toFixed(1)} 公里
-                  </span>
-                  <span className="text-xs text-base-content/50">
-                    總時間：{Math.floor(route.total_time / 60)}h{route.total_time % 60}m
-                  </span>
-                  <span className="text-xs text-base-content/50">
-                    總載重：{route.total_load}
-                  </span>
+                  <span className="text-xs text-base-content/50">總距離：{(route.total_distance / 1000).toFixed(1)} 公里</span>
+                  <span className="text-xs text-base-content/50">總時間：{Math.floor(route.total_time / 60)}h{route.total_time % 60}m</span>
+                  <span className="text-xs text-base-content/50">總載重：{route.total_load}</span>
                 </div>
 
-                {/* Stops table */}
                 <div className="overflow-x-auto">
                   <table className="table table-sm w-full">
                     <thead>
@@ -72,7 +58,7 @@ export default function RouteListModal({ open, compute, onClose }: RouteListModa
                         <th>地點名稱</th>
                         <th>地址</th>
                         <th>到達時間</th>
-                        <th>需求量</th>
+                        <th>動作</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -83,13 +69,17 @@ export default function RouteListModal({ open, compute, onClose }: RouteListModa
                           <tr key={stop.id} className="hover:bg-base-50">
                             <td className="text-center text-base-content/50">{stop.sequence + 1}</td>
                             <td className="font-medium">
-                              {stop.destination?.name ?? `地點 ${stop.destination_id}`}
+                              {stop.destination?.name ?? `地點 ${stop.destination_id.slice(0, 8)}`}
                             </td>
                             <td className="text-sm text-base-content/60 max-w-xs truncate">
                               {stop.destination?.address ?? '-'}
                             </td>
                             <td className="font-mono text-sm">{formatArrivalTime(stop.arrival_time)}</td>
-                            <td>{stop.demand}</td>
+                            <td>
+                              <span className={`badge badge-sm ${stop.action === 'pickup' ? 'badge-warning' : 'badge-info'}`}>
+                                {stop.action === 'pickup' ? '取餐' : stop.action === 'delivery' ? '送餐' : stop.action}
+                              </span>
+                            </td>
                           </tr>
                         ))}
                     </tbody>
@@ -104,9 +94,7 @@ export default function RouteListModal({ open, compute, onClose }: RouteListModa
           <button className="btn btn-ghost" onClick={onClose}>關閉</button>
         </div>
       </div>
-      <form method="dialog" className="modal-backdrop" onClick={onClose}>
-        <button>關閉</button>
-      </form>
+      <form method="dialog" className="modal-backdrop" onClick={onClose}><button>關閉</button></form>
     </dialog>
   )
 }
